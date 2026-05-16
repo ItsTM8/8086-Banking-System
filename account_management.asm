@@ -36,6 +36,18 @@ wit_msg        db 'Enter withdraw amount: $'
 invalid_msg    db 'Invalid amount!$'
 insuff_msg     db 'Insufficient balance!$'
 
+; Add these with your other message strings
+enter_admin     db 'Enter Admin PIN: $'
+admin1          db '1. View All Accounts$'
+admin2          db '2. Delete Account$'
+admin3          db '3. System Statistics$'
+admin4          db '4. Back to Main Menu$'
+admin_fail_msg  db 'Wrong PIN!$'
+delete_msg      db 'Account Deleted!$'
+total_msg       db 'Total Accounts: $'
+active_msg      db 'Active Accounts: $'
+file_name       db 'BANK.DAT',0
+
 ; ========================= storage =========================
 
 ; stores usernames
@@ -556,7 +568,273 @@ cmp_done:
 pop bx
 pop di
 pop si
-
 ret
-
 compare_string endp
+
+; ============================================================
+; TEHREEM'S ADDITIONS - Second Commit
+; Modules: Admin Panel, File I/O, Password Masking, UI
+; ============================================================
+
+; ============================================================
+; PASSWORD MASKING (shows *** while typing)
+; ============================================================
+
+get_masked_password proc
+    push di
+    mov cx, 0
+
+mask_loop:
+    mov ah, 08h
+    int 21h
+    cmp al, 13
+    je mask_done
+    cmp cx, 20
+    jae mask_loop
+    mov [di], al
+    inc di
+    inc cx
+    mov dl, '*'
+    mov ah, 02h
+    int 21h
+    jmp mask_loop
+
+mask_done:
+    mov byte ptr [di], '$'
+    pop di
+    ret
+get_masked_password endp
+
+; ============================================================
+; ADMIN PANEL 
+; ============================================================
+
+admin_panel:
+    call clear_screen
+    mov dx, offset enter_admin
+    call print
+    mov di, offset input_pass
+    call get_masked_password
+    call newline
+
+    cmp byte ptr input_pass, '9'
+    jne admin_fail
+    cmp byte ptr input_pass+1, '9'
+    jne admin_fail
+    cmp byte ptr input_pass+2, '9'
+    jne admin_fail
+    cmp byte ptr input_pass+3, '9'
+    jne admin_fail
+
+admin_menu:
+    call clear_screen
+    mov dx, offset admin1
+    call print
+    call newline
+    mov dx, offset admin2
+    call print
+    call newline
+    mov dx, offset admin3
+    call print
+    call newline
+    mov dx, offset admin4
+    call print
+    call newline
+
+    mov dx, offset choice_msg
+    call print
+    mov ah, 01h
+    int 21h
+    sub al, 30h
+
+    cmp al, 1
+    je view_accounts
+    cmp al, 2
+    je delete_account
+    cmp al, 3
+    je system_stats
+    cmp al, 4
+    je main_menu
+    jmp admin_menu
+
+admin_fail:
+    mov dx, offset admin_fail_msg
+    call print
+    call wait_key
+    jmp main_menu
+
+view_accounts:
+    call clear_screen
+    mov si, 0
+view_loop:
+    cmp si, 10
+    jge view_done
+    cmp status[si], 1
+    jne next_view
+    mov ax, si
+    mov bx, 20
+    mul bx
+    mov bx, ax
+    lea dx, usernames[bx]
+    call print
+    call newline
+next_view:
+    inc si
+    jmp view_loop
+view_done:
+    call wait_key
+    jmp admin_menu
+
+delete_account:
+    call clear_screen
+    mov dx, offset enter_user
+    call print
+    mov di, offset input_user
+    call get_string
+    call newline
+
+    mov si, 0
+del_loop:
+    cmp si, 10
+    jge del_done
+    cmp status[si], 1
+    jne next_del
+    mov ax, si
+    mov bx, 20
+    mul bx
+    mov bx, ax
+    lea di, input_user
+    lea dx, usernames[bx]
+    call compare_string
+    cmp al, 1
+    je found_del
+next_del:
+    inc si
+    jmp del_loop
+found_del:
+    mov status[si], 0
+    dec acc_count
+    call save_data
+    mov dx, offset delete_msg
+    call print
+    call wait_key
+    jmp admin_menu
+del_done:
+    mov dx, offset fail_msg
+    call print
+    call wait_key
+    jmp admin_menu
+
+system_stats:
+    call clear_screen
+    mov dx, offset total_msg
+    call print
+    mov al, acc_count
+    cbw
+    call print_number
+    call newline
+
+    mov dx, offset active_msg
+    call print
+    mov si, 0
+    mov cx, 0
+count_loop:
+    cmp si, 10
+    jge show_active
+    cmp status[si], 1
+    jne skip_active
+    inc cx
+skip_active:
+    inc si
+    jmp count_loop
+show_active:
+    mov ax, cx
+    call print_number
+    call wait_key
+    jmp admin_menu
+
+; ============================================================
+; FILE I/O - SAVE DATA
+; ============================================================
+
+save_data proc
+    mov ah, 3ch
+    mov cx, 0
+    mov dx, offset file_name
+    int 21h
+    jc save_exit
+    mov bx, ax
+
+    mov ah, 40h
+    mov cx, 200
+    mov dx, offset usernames
+    int 21h
+
+    mov ah, 40h
+    mov cx, 200
+    mov dx, offset passwords
+    int 21h
+
+    mov ah, 40h
+    mov cx, 20
+    mov dx, offset balances
+    int 21h
+
+    mov ah, 40h
+    mov cx, 10
+    mov dx, offset status
+    int 21h
+
+    mov ah, 40h
+    mov cx, 1
+    mov dx, offset acc_count
+    int 21h
+
+    mov ah, 3eh
+    int 21h
+save_exit:
+    ret
+save_data endp
+
+; ============================================================
+; FILE I/O - LOAD DATA
+; ============================================================
+
+load_data proc
+    mov ah, 3dh
+    mov al, 0
+    mov dx, offset file_name
+    int 21h
+    jc load_exit
+    mov bx, ax
+
+    mov ah, 3fh
+    mov cx, 200
+    mov dx, offset usernames
+    int 21h
+
+    mov ah, 3fh
+    mov cx, 200
+    mov dx, offset passwords
+    int 21h
+
+    mov ah, 3fh
+    mov cx, 20
+    mov dx, offset balances
+    int 21h
+
+    mov ah, 3fh
+    mov cx, 10
+    mov dx, offset status
+    int 21h
+
+    mov ah, 3fh
+    mov cx, 1
+    mov dx, offset acc_count
+    int 21h
+
+    mov ah, 3eh
+    int 21h
+load_exit:
+    ret
+load_data endp
