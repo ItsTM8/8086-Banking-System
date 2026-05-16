@@ -167,29 +167,29 @@ CEN323_GXX_MultiAccountBankingSystem/
 ## 📸 Screenshots
 
 ### 1. Main Menu
-![Main Menu](1-mainmenu.png)
+![Main Menu](mainmenu.png)
 
 ### 2. Create Account (with password masking)
-![Create Account](2-createaccount.png)
+![Create Account](createaccount.png)
 
 ### 3. Login Screen
-![Login Screen](3-login.png)
+![Login Screen](login.png)
 
 ### 4. User Menu (After Login)
-![User Menu](4-usermenu.png)
+![User Menu](usermenu.png)
 
 ### 5. Deposit Transaction
-![Deposit](5-deposit.png)
-![Deposit](5-deposit1.png)
+![Deposit](deposit.png)
+![Deposit](deposit1.png)
 
 ### 6. Withdraw Transaction
-![Withdraw](6-withdraw.png)
+![Withdraw](withdraw.png)
 
 ### 7. Transfer Money
-![Transfer Money](7-transfer.png)
+![Transfer Money](transfer.png)
 
 ### 8. Admin Panel
-![Admin Panel](9-adminpanel.png)
+![Admin Panel](adminpanel.png)
 ---
 
 ## ⚠️ Error Handling
