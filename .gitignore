@@ -1,0 +1,29 @@
+# emu8086 generated files
+*.obj
+*.lst
+*.bin
+*.hex
+*.map
+
+# Bank data file (auto-generated when program runs)
+BANK.DAT
+
+# Windows junk files
+Thumbs.db
+desktop.ini
+
+# macOS junk files
+.DS_Store
+.AppleDouble
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Temporary files
+*.tmp
+*.temp
+
+# emu8086 specific
+emu8086.log
