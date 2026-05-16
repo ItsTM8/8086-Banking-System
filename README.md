@@ -174,6 +174,7 @@ CEN323_GXX_MultiAccountBankingSystem/
 
 ### 3. Login Screen
 ![Login Screen](login.png)
+![Login Screen](login2.png)
 
 ### 4. User Menu (After Login)
 ![User Menu](usermenu.png)
