@@ -180,11 +180,13 @@ CEN323_GXX_MultiAccountBankingSystem/
 ![User Menu](usermenu.png)
 
 ### 5. Deposit Transaction
-![Deposit](Deposit.png)
 ![Deposit](deposit1.png)
+![Deposit](Deposit.png)
+
 
 ### 6. Transfer Money
 ![Transfer Money](transfer.png)
+![Transfer Money](transfer2.png)
 
 ### 7. Transaction History
 ![Withdraw](transactionhistory.png)
