@@ -30,6 +30,8 @@ The system is designed to demonstrate core **Computer Organization and Assembly 
 - DOS Interrupts (INT 21h)  
 
 
+
+
 # 🏦 ATM Banking System in 8086 Assembly
 
 ## CEN323 – Computer Organization & Assembly Language (COAL)
@@ -49,8 +51,8 @@ The system allows users to create accounts, log in securely, deposit and withdra
 
 | Name | Registration Number | Role |
 |------|---------------------|------|
-| [Your Name] | 01-xxxxxx-xxx | Main menu, account creation, login system, admin panel, file handling |
-| [Partner Name] | 01-xxxxxx-xxx | Deposit/withdraw, transfer system, transaction history |
+| [Tehreem Mubashar] | 01-135232-102 | Main menu, account creation, login system, admin panel, file handling |
+| [Taqwa Qureshi] | 01-135232-101 | Deposit/withdraw, transfer system, transaction history |
 
 ---
 
