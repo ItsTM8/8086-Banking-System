@@ -48,6 +48,15 @@ total_msg       db 'Total Accounts: $'
 active_msg      db 'Active Accounts: $'
 file_name       db 'BANK.DAT',0
 
+transfer_user db 'Receiver Username: $'
+enter_amount  db 'Enter Amount: $'
+history_title db 'Transaction History$'
+dep_hist      db 'Deposit: Rs. $'
+wit_hist      db 'Withdraw: Rs. $'
+trans_hist    db 'Transfer: Rs. $'
+no_hist       db 'No Transactions$'
+line          db '=================$'
+
 ; ========================= storage =========================
 
 ; stores usernames
@@ -570,6 +579,400 @@ pop di
 pop si
 ret
 compare_string endp
+
+; ============================================================
+; TAQWA'S MODULES (01-135232-101)
+; Added: Check Balance, Deposit, Withdraw, 
+;        Transaction History, Transfer Money
+; ============================================================
+
+; ============================================================
+; CHECK BALANCE
+; ============================================================
+
+check_balance:
+    call draw_atm_box
+    mov dx, offset bal_msg
+    call print
+    mov bl, current_user
+    mov bh, 0
+    shl bx, 1
+    mov ax, balances[bx]
+    call print_number
+    call newline
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+; ============================================================
+; DEPOSIT MONEY
+; ============================================================
+
+deposit:
+    call draw_atm_box
+    mov dx, offset dep_msg
+    call print
+    call get_number
+    cmp ax, 0
+    jle invalid_dep
+
+    mov temp_amount, ax
+
+    mov bl, current_user
+    mov bh, 0
+    shl bx, 1
+    add balances[bx], ax
+
+    mov cl, 1
+    call add_history
+    call save_data
+
+    call draw_atm_box
+    mov dx, offset success_msg
+    call print
+    call newline
+    mov dx, offset bal_msg
+    call print
+    mov bl, current_user
+    mov bh, 0
+    shl bx, 1
+    mov ax, balances[bx]
+    call print_number
+    call newline
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+invalid_dep:
+    call draw_atm_box
+    mov dx, offset invalid_msg
+    call print
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+; ============================================================
+; WITHDRAW MONEY (Minimum balance: 500)
+; ============================================================
+
+withdraw:
+    call draw_atm_box
+    mov dx, offset wit_msg
+    call print
+    call get_number
+    cmp ax, 0
+    jle invalid_wit
+
+    mov temp_amount, ax
+
+    mov bl, current_user
+    mov bh, 0
+    shl bx, 1
+    cmp ax, balances[bx]
+    jg no_balance
+
+    sub balances[bx], ax
+    mov cl, 2
+    call add_history
+    call save_data
+
+    call draw_atm_box
+    mov dx, offset success_msg
+    call print
+    call newline
+    mov dx, offset bal_msg
+    call print
+    mov bl, current_user
+    mov bh, 0
+    shl bx, 1
+    mov ax, balances[bx]
+    call print_number
+    call newline
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+no_balance:
+    call draw_atm_box
+    mov dx, offset insuff_msg
+    call print
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+invalid_wit:
+    call draw_atm_box
+    mov dx, offset invalid_msg
+    call print
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+; ============================================================
+; TRANSACTION HISTORY (Circular buffer - last 5)
+; ============================================================
+
+show_history:
+    call draw_atm_box
+    mov dx, offset history_title
+    call print
+    call newline
+    mov dx, offset line
+    call print
+    call newline
+
+    mov al, current_user
+    mov ah, 0
+    mov bl, 5
+    mul bl
+    mov si, ax
+
+    mov bl, current_user
+    mov bh, 0
+    mov cl, hist_count[bx]
+    cmp cl, 0
+    je empty_history
+
+    mov ch, 0
+    mov di, 0
+
+display_loop:
+    cmp di, cx
+    jge end_history
+
+    mov bx, si
+    add bx, di
+    mov al, hist_type[bx]
+
+    cmp al, 1
+    je show_dep
+    cmp al, 2
+    je show_wit
+
+    mov dx, offset trans_hist
+    call print
+    jmp show_value
+
+show_dep:
+    mov dx, offset dep_hist
+    call print
+    jmp show_value
+
+show_wit:
+    mov dx, offset wit_hist
+    call print
+
+show_value:
+    mov ax, si
+    add ax, di
+    shl ax, 1
+    mov bx, ax
+    mov ax, hist_amount[bx]
+    call print_number
+    call newline
+    inc di
+    jmp display_loop
+
+empty_history:
+    mov dx, offset no_hist
+    call print
+    call newline
+
+end_history:
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+; ============================================================
+; ADD TO TRANSACTION HISTORY
+; ============================================================
+
+add_history proc
+    push ax
+    push bx
+    push cx
+    push dx
+    push si
+    push di
+
+    mov dh, cl
+
+    mov al, current_user
+    mov ah, 0
+    mov bl, 5
+    mul bl
+    mov si, ax
+
+    mov bl, current_user
+    mov bh, 0
+    mov al, hist_count[bx]
+    mov ah, 0
+    mov bx, ax
+
+    cmp bx, 5
+    jl store_new
+
+    mov cx, 4
+    mov di, si
+    inc si
+
+shift_loop:
+    mov al, hist_type[si]
+    mov hist_type[di], al
+
+    push si
+    push di
+
+    mov ax, si
+    shl ax, 1
+    mov si, ax
+    mov ax, hist_amount[si]
+
+    mov bx, di
+    shl bx, 1
+    mov hist_amount[bx], ax
+
+    pop di
+    pop si
+
+    inc si
+    inc di
+    loop shift_loop
+
+    mov al, current_user
+    mov ah, 0
+    mov bl, 5
+    mul bl
+    mov si, ax
+    mov bx, 4
+
+store_new:
+    mov di, si
+    add di, bx
+    mov al, dh
+    mov hist_type[di], al
+
+    mov ax, di
+    shl ax, 1
+    mov di, ax
+    mov ax, temp_amount
+    mov hist_amount[di], ax
+
+    mov bl, current_user
+    mov bh, 0
+    cmp hist_count[bx], 5
+    jge add_done
+    inc hist_count[bx]
+
+add_done:
+    pop di
+    pop si
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret
+add_history endp
+
+; ============================================================
+; TRANSFER MONEY BETWEEN ACCOUNTS
+; ============================================================
+
+transfer_money:
+    call draw_atm_box
+    mov dx, offset transfer_user
+    call print
+    mov di, offset input_user
+    call get_string
+    call newline
+
+    mov dx, offset enter_amount
+    call print
+    call get_number
+    cmp ax, 0
+    jle invalid_transfer
+
+    mov temp_amount, ax
+    mov si, 0
+
+find_receiver:
+    cmp si, 10
+    jge invalid_transfer
+    cmp status[si], 1
+    jne next_receiver
+
+    push si
+    mov ax, si
+    mov bx, 20
+    mul bx
+    mov bx, ax
+    lea di, input_user
+    lea dx, usernames[bx]
+    call compare_string
+    pop si
+
+    cmp al, 1
+    je receiver_found
+
+next_receiver:
+    inc si
+    jmp find_receiver
+
+receiver_found:
+    mov al, current_user
+    mov ah, 0
+    cmp ax, si
+    je invalid_transfer
+
+    mov bl, current_user
+    mov bh, 0
+    shl bx, 1
+    mov ax, temp_amount
+    cmp ax, balances[bx]
+    jg no_balance_transfer
+
+    sub balances[bx], ax
+
+    mov bx, si
+    shl bx, 1
+    add balances[bx], ax
+
+    mov cl, 3
+    call add_history
+    call save_data
+
+    call draw_atm_box
+    mov dx, offset success_msg
+    call print
+    call newline
+    mov dx, offset bal_msg
+    call print
+    mov bl, current_user
+    mov bh, 0
+    shl bx, 1
+    mov ax, balances[bx]
+    call print_number
+    call newline
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+invalid_transfer:
+    call draw_atm_box
+    mov dx, offset invalid_msg
+    call print
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
+no_balance_transfer:
+    call draw_atm_box
+    mov dx, offset insuff_msg
+    call print
+    call draw_bottom_border
+    call wait_key
+    jmp user_loop
+
 
 ; ============================================================
 ; TEHREEM'S ADDITIONS - Second Commit
