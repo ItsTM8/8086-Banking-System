@@ -166,16 +166,30 @@ CEN323_GXX_MultiAccountBankingSystem/
 
 ## 📸 Screenshots
 
-Screenshots of different program modules and outputs are attached below.
+### 1. Main Menu
+![Main Menu](1-mainmenu.png)
 
-- Main Menu
-- Create Account Screen
-- Login Screen
-- Deposit/Withdraw Module
-- Transfer Module
-- Transaction History
-- Admin Panel
+### 2. Create Account (with password masking)
+![Create Account](2-createaccount.png)
 
+### 3. Login Screen
+![Login Screen](3-login.png)
+
+### 4. User Menu (After Login)
+![User Menu](4-usermenu.png)
+
+### 5. Deposit Transaction
+![Deposit](5-deposit.png)
+![Deposit](5-deposit1.png)
+
+### 6. Withdraw Transaction
+![Withdraw](6-withdraw.png)
+
+### 7. Transfer Money
+![Transfer Money](7-transfer.png)
+
+### 8. Admin Panel
+![Admin Panel](9-adminpanel.png)
 ---
 
 ## ⚠️ Error Handling
