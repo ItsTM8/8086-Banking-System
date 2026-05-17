@@ -115,63 +115,45 @@ input_user     db 21 dup('$')
 input_pass     db 21 dup('$')
 
 ; ========================= start =========================
-
 start:
-
-; initialize data segment
-mov ax, cs
-mov ds, ax
+    mov ax, cs
+    mov ds, ax
+    call load_data
+    call show_ascii_logo
+    call wait_key
+    jmp main_menu
 
 ; ========================= main menu =========================
 
 main_menu:
+    call draw_atm_box
+    call show_ascii_logo_small
 
-; clear screen
-call clear_screen
+    mov dx, offset main1
+    call print
+    call newline
+    mov dx, offset main2
+    call print
+    call newline
+    mov dx, offset main3
+    call print
+    call newline
+    call draw_bottom_border
 
-; print title
-mov dx, offset title_msg
-call print
-call newline
-call newline
+    mov dx, offset choice_msg
+    call print
 
-; print menu options
-mov dx, offset main1
-call print
-call newline
+    mov ah, 01h
+    int 21h
+    sub al, 30h
 
-mov dx, offset main2
-call print
-call newline
-
-mov dx, offset main3
-call print
-call newline
-call newline
-
-; ask user for choice
-mov dx, offset choice_msg
-call print
-
-; take character input
-mov ah, 01h
-int 21h
-
-; convert ascii to number
-sub al, 30h
-
-; check menu selection
-cmp al, 1
-je create_account
-
-cmp al, 2
-je login_system
-
-cmp al, 3
-je exit_program
-
-; invalid choice -> show menu again
-jmp main_menu
+    cmp al, 1
+    je create_account
+    cmp al, 2
+    je login_system
+    cmp al, 3
+    je exit_program
+    jmp main_menu
 
 ; ========================= create account =========================
 
@@ -339,6 +321,62 @@ call wait_key
 call user_session
 
 jmp main_menu
+
+; ============================================================
+; USER SESSION MENU
+; ============================================================
+
+user_session:
+user_loop:
+    call draw_atm_box
+
+    mov dx, offset welcome_msg
+    call print
+    mov bl, current_user
+    mov bh, 0
+    shl bx, 1
+    mov ax, balances[bx]
+    call print_number
+    call newline
+    call newline
+
+    mov dx, offset user1
+    call print
+    call newline
+    mov dx, offset user2
+    call print
+    call newline
+    mov dx, offset user3
+    call print
+    call newline
+    mov dx, offset user4
+    call print
+    call newline
+    mov dx, offset user5
+    call print
+    call newline
+    call draw_bottom_border
+
+    mov dx, offset choice_msg
+    call print
+    mov ah, 01h
+    int 21h
+    sub al, 30h
+
+    cmp al, 1
+    je check_balance
+    cmp al, 2
+    je deposit
+    cmp al, 3
+    je withdraw
+    cmp al, 4
+    je show_history
+    cmp al, 5
+    je logout
+    jmp user_loop
+
+logout:
+    ret
 
 ; ========================= verify user =========================
 
