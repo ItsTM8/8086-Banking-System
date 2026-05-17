@@ -1,6 +1,37 @@
 org 100h
-
 jmp start
+
+; ============================================================
+; TEHREEM'S FINAL COMMIT - UI POLISH 
+; ============================================================
+
+; ASCII ART LOGO
+LOGO1 DB '  ____              _        $'
+LOGO2 DB ' | __ )  __ _ _ __ | | __    $'
+LOGO3 DB ' |  _ \ / _` |  _ \| |/ /    $'
+LOGO4 DB ' | |_) | (_| | | | |   <     $'
+LOGO5 DB ' |____/ \__,_|_| |_|_|\_\    $'
+LOGO6 DB '      ATM BANKING SYSTEM     $'
+
+; ATM-STYLE BOX BORDERS
+TITLE1 DB '+--------------------------------------------------------------+$'
+TITLE2 DB '|                 ATM BANKING MANAGEMENT SYSTEM                |$'
+TITLE3 DB '+--------------------------------------------------------------+$'
+
+; BOX HELPERS
+BOX_START DB '|  $'
+BOX_END DB '  |$'
+
+; SUCCESS MESSAGES
+SUCCESS_TEXT DB ' SUCCESS! $'
+DEPOSIT_TEXT DB ' AMOUNT DEPOSITED SUCCESSFULLY! $'
+WITHDRAW_TEXT DB ' AMOUNT WITHDRAWN SUCCESSFULLY! $'
+TRANSFER_TEXT DB ' MONEY TRANSFERRED SUCCESSFULLY! $'
+DELETE_TEXT DB ' ACCOUNT DELETED! $'
+LOCK_TEXT DB ' ACCOUNT LOCKED! $'
+
+; TIME DISPLAY
+TIME_MSG DB '|  TIME: $'
 
 ; ========================= data section =========================
 
@@ -1241,3 +1272,118 @@ load_data proc
 load_exit:
     ret
 load_data endp
+; ============================================================
+; NEW UI PROCEDURES (ADD THIS BLOCK)
+; ============================================================
+
+draw_atm_box proc
+    call clear_screen
+    mov dx, offset TITLE1
+    call print
+    call newline
+    mov dx, offset TITLE2
+    call print
+    call newline
+    mov dx, offset TITLE3
+    call print
+    call newline
+    call newline
+    ret
+draw_atm_box endp
+
+draw_bottom_border proc
+    mov dx, offset TITLE3
+    call print
+    call newline
+    ret
+draw_bottom_border endp
+
+show_ascii_logo proc
+    call clear_screen
+    mov dx, offset LOGO1
+    call print
+    call newline
+    mov dx, offset LOGO2
+    call print
+    call newline
+    mov dx, offset LOGO3
+    call print
+    call newline
+    mov dx, offset LOGO4
+    call print
+    call newline
+    mov dx, offset LOGO5
+    call print
+    call newline
+    mov dx, offset LOGO6
+    call print
+    call newline
+    call newline
+    ret
+show_ascii_logo endp
+
+show_ascii_logo_small proc
+    mov dx, offset LOGO6
+    call print
+    call newline
+    ret
+show_ascii_logo_small endp
+
+print_dollar proc
+    mov dl, '$'
+    mov ah, 02h
+    int 21h
+    ret
+print_dollar endp
+
+print_success_line proc
+    push dx
+    mov dx, offset BOX_START
+    call print
+    call print_dollar
+    call print_dollar
+    call print_dollar
+    pop dx
+    call print
+    call print_dollar
+    call print_dollar
+    call print_dollar
+    mov dx, offset BOX_END
+    call print
+    call newline
+    ret
+print_success_line endp
+
+show_time proc
+    mov ah, 2ch
+    int 21h
+    mov al, ch
+    cbw
+    call print_number
+    mov dl, ':'
+    mov ah, 02h
+    int 21h
+    mov al, cl
+    cbw
+    call print_number
+    ret
+show_time endp
+
+wait_key proc
+clear_keys:
+    mov ah, 01h
+    int 16h
+    jz wait_now
+    mov ah, 00h
+    int 16h
+    jmp clear_keys
+wait_now:
+    mov ah, 00h
+    int 16h
+    ret
+wait_key endp
+
+; ========================= exit =========================
+exit_program:
+    mov ah, 4ch
+    int 21h
